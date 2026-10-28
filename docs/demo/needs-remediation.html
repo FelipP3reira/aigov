@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; style-src &#x27;sha256-DX42Ec9XMzxlJZqiH6s1Uug7FHNPBn2/WzILn7v7tJg=&#x27;; script-src &#x27;sha256-fbm/QF1PIc3pLNXL5dPqXIVBBtyvKFJPg4wMZeaG1s4=&#x27;; img-src data:; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;">
+<meta name="referrer" content="no-referrer">
+<title>aigov scorecard: needs-remediation</title>
+<style>
+:root {
+  --bg: #F5F7F8; --surface: #FFFFFF; --ink: #14202B; --muted: #4D5B68; --line: #D8DEE3;
+  --accent: #2F5D8A; --focus: #2F5D8A;
+  --pass: #2E7D5B; --warn: #B7791F; --fail: #B3261E; --na: #8A97A3;
+  --pass-ink: #2E7D5B; --warn-ink: #85560F; --fail-ink: #B3261E; --na-ink: #5B6772;
+  --on-pass: #FFFFFF; --on-warn: #14202B; --on-fail: #FFFFFF; --on-na: #14202B;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F161D; --surface: #16202A; --ink: #E6ECF1; --muted: #9AA8B5; --line: #2A3743;
+    --accent: #8DB4DB; --focus: #8DB4DB;
+    --pass-ink: #6CC49A; --warn-ink: #E3AE55; --fail-ink: #F08A80; --na-ink: #A3AFBA;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.page { max-width: 1080px; margin: 0 auto; padding: 40px 24px 64px; }
+a { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 2px; }
+code, .mono { font-family: var(--mono); font-size: 0.875em; overflow-wrap: anywhere; }
+h2 { font-size: 1.35rem; margin: 56px 0 6px; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; margin: 32px 0 10px; }
+.lede { color: var(--muted); margin: 0 0 20px; max-width: 70ch; }
+.meta { color: var(--muted); font-size: 0.9rem; margin: 0 0 18px; }
+
+/* Hero */
+.hero h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.15; margin: 0 0 16px;
+  letter-spacing: -0.02em; max-width: 24ch; font-weight: 650; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0 0 32px; padding: 0; list-style: none; }
+.facts li { color: var(--muted); }
+.facts strong { color: var(--ink); font-weight: 600; }
+.score-num { font-variant-numeric: tabular-nums; }
+
+/* Status label: icon + word, never colour alone */
+.st { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+.st .ic { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%;
+  font-size: 0.8em; line-height: 1; color: var(--surface); }
+.st.pass { color: var(--pass-ink); } .st.pass .ic { background: var(--pass-ink); }
+.st.warn { color: var(--warn-ink); } .st.warn .ic { background: var(--warn-ink); }
+.st.fail { color: var(--fail-ink); } .st.fail .ic { background: var(--fail-ink); }
+.st.na { color: var(--na-ink); } .st.na .ic { background: var(--na-ink); }
+
+/* The strip */
+.strip { display: flex; gap: 14px; margin: 0; }
+.strip-group { min-width: 0; }
+.strip-group h2 { font-size: 0.9rem; font-weight: 600; margin: 0 0 6px; color: var(--muted);
+  display: flex; justify-content: space-between; gap: 8px; letter-spacing: 0; }
+.strip-group h2 span { font-variant-numeric: tabular-nums; }
+.cells { display: flex; gap: 3px; }
+.cell { flex: 1 1 0; min-width: 0; height: 76px; padding: 8px 8px 7px; display: flex; flex-direction: column;
+  justify-content: space-between; text-decoration: none; border-radius: 3px; }
+.cells .cell:first-child { border-radius: 6px 3px 3px 6px; }
+.cells .cell:last-child { border-radius: 3px 6px 6px 3px; }
+.cell .ic { font-size: 1.05rem; font-weight: 700; line-height: 1; }
+.cell .id { font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; overflow: hidden; }
+.cell .word { font-size: 0.72rem; font-weight: 600; }
+.cell.pass { background: var(--pass); color: var(--on-pass); }
+.cell.warn { background: var(--warn); color: var(--on-warn); }
+.cell.fail { background: var(--fail); color: var(--on-fail); }
+.cell.na { background: transparent; color: var(--na-ink); border: 1.5px dashed var(--na); }
+@media (prefers-reduced-motion: no-preference) {
+  .cell { transition: transform 120ms ease; }
+  .cell:hover { transform: translateY(-2px); }
+}
+.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 14px 0 0; padding: 0; list-style: none;
+  font-size: 0.85rem; }
+
+/* Function summary */
+table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 0.92rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+tbody tr:last-child td { border-bottom: 0; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fn-name { font-weight: 600; }
+.fn-blurb { display: block; color: var(--muted); font-size: 0.85rem; }
+
+/* Controls */
+details.control { background: var(--surface); border: 1px solid var(--line); border-left-width: 4px;
+  border-radius: 6px; margin: 0 0 10px; }
+details.control.pass { border-left-color: var(--pass); }
+details.control.warn { border-left-color: var(--warn); }
+details.control.fail { border-left-color: var(--fail); }
+details.control.na { border-left-color: var(--na); border-left-style: dashed; }
+details.control > summary { cursor: pointer; padding: 14px 16px; list-style: none;
+  display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 4px 16px; align-items: baseline; }
+details.control > summary::-webkit-details-marker { display: none; }
+.c-title { font-weight: 600; }
+.c-title .mono { color: var(--muted); font-weight: 400; margin-right: 6px; }
+.c-weight { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.c-weight::after { content: " \25B8"; }
+details[open] .c-weight::after { content: " \25BE"; }
+.c-summary { grid-column: 2 / 4; color: var(--muted); font-size: 0.93rem; }
+.c-body { padding: 4px 16px 18px; border-top: 1px solid var(--line); }
+.c-body h4 { font-size: 0.9rem; margin: 18px 0 6px; }
+.c-body p { margin: 0; max-width: 75ch; }
+.c-body .table-wrap { margin-top: 4px; }
+.refs { color: var(--muted); font-size: 0.85rem; margin-top: 14px !important; }
+.sev { font-weight: 600; white-space: nowrap; }
+.sev.fail { color: var(--fail-ink); } .sev.warn { color: var(--warn-ink); } .sev.na { color: var(--na-ink); }
+.empty { color: var(--muted); font-style: italic; margin: 6px 0 0; }
+
+/* Notice */
+.notice { border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--surface);
+  padding: 16px 18px; border-radius: 6px; max-width: 80ch; }
+.limits { padding-left: 1.2em; max-width: 80ch; }
+.limits li { margin-bottom: 6px; }
+footer { margin-top: 56px; color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 760px) {
+  .page { padding: 28px 16px 48px; }
+  .strip { flex-wrap: wrap; }
+  .strip-group { flex: 1 1 calc(50% - 7px) !important; }
+}
+@media (max-width: 480px) {
+  .strip-group { flex-basis: 100% !important; }
+  details.control > summary { grid-template-columns: 1fr auto; }
+  .c-summary { grid-column: 1 / 3; }
+}
+@media print {
+  :root { --bg: #FFFFFF; --surface: #FFFFFF; }
+  body { font-size: 11pt; }
+  .page { max-width: none; padding: 0; }
+  .cell { height: 54px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .st .ic, .cell { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  details.control { break-inside: avoid; }
+  .c-weight::after { content: ""; }
+  a { color: inherit; text-decoration: none; }
+  h2 { break-after: avoid; }
+}
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.muted { color: var(--muted); }
+.strip-group.g3 { flex: 3 1 0; }
+.strip-group.g4 { flex: 4 1 0; }
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="hero">
+  <p class="meta">aigov scorecard for <strong class="mono">needs-remediation</strong> &middot; 2026-10-28 02:24:03 UTC</p>
+  <h1>Blocked: 1 critical finding must be fixed before this ships</h1>
+  <ul class="facts">
+    <li>Score <strong class="score-num">6.9</strong> of 100</li>
+    <li>Verdict <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Blocked</span></li>
+    <li>Gate <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Failed</span> <span class="muted">(score 6.9 is below the minimum of 70; 1 critical finding and block_on_critical is enabled)</span></li>
+    <li>0 pass, 2 warn, 11 fail, 0 not assessed</li>
+  </ul>
+  <div class="strip" role="group" aria-label="Controls by function"><nav class="strip-group g3" aria-labelledby="sg-Govern"><h2 id="sg-Govern">Govern <span>0</span></h2><div class="cells"><a class="cell fail" href="#ctl-GOV-01" title="GOV-01 AI usage policy: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">GOV-01</span><br><span class="word">Fail</span></span><span class="sr"> AI usage policy</span></a><a class="cell fail" href="#ctl-GOV-02" title="GOV-02 Code ownership: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">GOV-02</span><br><span class="word">Fail</span></span><span class="sr"> Code ownership</span></a><a class="cell fail" href="#ctl-GOV-03" title="GOV-03 PR template asks about AI: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">GOV-03</span><br><span class="word">Fail</span></span><span class="sr"> PR template asks about AI</span></a></div></nav><nav class="strip-group g3" aria-labelledby="sg-Map"><h2 id="sg-Map">Map <span>18.8</span></h2><div class="cells"><a class="cell fail" href="#ctl-MAP-01" title="MAP-01 AI provenance is declared and reviewed: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MAP-01</span><br><span class="word">Fail</span></span><span class="sr"> AI provenance is declared and reviewed</span></a><a class="cell fail" href="#ctl-MAP-02" title="MAP-02 LLM inventory: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MAP-02</span><br><span class="word">Fail</span></span><span class="sr"> LLM inventory</span></a><a class="cell warn" href="#ctl-MAP-03" title="MAP-03 Personal data in the repository: Warn"><span class="ic" aria-hidden="true">!</span><span><span class="id">MAP-03</span><br><span class="word">Warn</span></span><span class="sr"> Personal data in the repository</span></a></div></nav><nav class="strip-group g3" aria-labelledby="sg-Measure"><h2 id="sg-Measure">Measure <span>0</span></h2><div class="cells"><a class="cell fail" href="#ctl-MEA-01" title="MEA-01 Hard-coded secrets: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MEA-01</span><br><span class="word">Fail</span></span><span class="sr"> Hard-coded secrets</span></a><a class="cell fail" href="#ctl-MEA-02" title="MEA-02 Risky code patterns: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MEA-02</span><br><span class="word">Fail</span></span><span class="sr"> Risky code patterns</span></a><a class="cell fail" href="#ctl-MEA-03" title="MEA-03 Automated tests: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MEA-03</span><br><span class="word">Fail</span></span><span class="sr"> Automated tests</span></a></div></nav><nav class="strip-group g4" aria-labelledby="sg-Manage"><h2 id="sg-Manage">Manage <span>7.1</span></h2><div class="cells"><a class="cell fail" href="#ctl-MAN-01" title="MAN-01 Human review evidence: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MAN-01</span><br><span class="word">Fail</span></span><span class="sr"> Human review evidence</span></a><a class="cell fail" href="#ctl-MAN-02" title="MAN-02 CI runs tests: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MAN-02</span><br><span class="word">Fail</span></span><span class="sr"> CI runs tests</span></a><a class="cell warn" href="#ctl-MAN-03" title="MAN-03 Locked dependencies: Warn"><span class="ic" aria-hidden="true">!</span><span><span class="id">MAN-03</span><br><span class="word">Warn</span></span><span class="sr"> Locked dependencies</span></a><a class="cell fail" href="#ctl-MAN-04" title="MAN-04 Security and incident process: Fail"><span class="ic" aria-hidden="true">✕</span><span><span class="id">MAN-04</span><br><span class="word">Fail</span></span><span class="sr"> Security and incident process</span></a></div></nav></div><ul class="legend" aria-label="Legend"><li><span class="st pass"><span class="ic" aria-hidden="true">✓</span>Pass</span></li><li><span class="st warn"><span class="ic" aria-hidden="true">!</span>Warn</span></li><li><span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span></li><li><span class="st na"><span class="ic" aria-hidden="true">–</span>N/A</span></li></ul>
+</header>
+<section aria-labelledby="h-functions">
+  <h2 id="h-functions">Summary by function</h2>
+  <p class="lede">Controls are grouped by the four NIST AI RMF functions purely to organise this
+  report. Scores are weighted: pass counts fully, warn counts half, fail counts zero, and controls
+  that were not assessed are left out.</p>
+  <div class="table-wrap"><table><thead><tr><th scope="col">Function</th><th scope="col">Score</th><th scope="col"><span class="st pass"><span class="ic" aria-hidden="true">✓</span>Pass</span></th><th scope="col"><span class="st warn"><span class="ic" aria-hidden="true">!</span>Warn</span></th><th scope="col"><span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span></th><th scope="col"><span class="st na"><span class="ic" aria-hidden="true">–</span>N/A</span></th></tr></thead><tbody><tr><td><span class="fn-name">Govern</span><span class="fn-blurb">Policy, ownership and process</span></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">0</td></tr><tr><td><span class="fn-name">Map</span><span class="fn-blurb">Where AI is used, by whom, on what data</span></td><td class="num">18.8</td><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">0</td></tr><tr><td><span class="fn-name">Measure</span><span class="fn-blurb">Secrets, risky patterns and tests</span></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">0</td></tr><tr><td><span class="fn-name">Manage</span><span class="fn-blurb">Review evidence, CI, dependencies, incidents</span></td><td class="num">7.1</td><td class="num">0</td><td class="num">1</td><td class="num">3</td><td class="num">0</td></tr></tbody></table></div>
+</section><section aria-labelledby="h-controls"><h2 id="h-controls">Controls</h2><p class="lede">Failing controls are expanded. Select any control to see why it matters, every finding and how to fix it.</p><h3>Govern</h3>
+<details class="control fail" id="ctl-GOV-01" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">GOV-01</span>AI usage policy</span>
+    <span class="c-weight">weight 3</span>
+    <span class="c-summary">No AI usage policy found.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Without a written policy, each engineer decides alone which tools to use, what data may be pasted into them and who answers for the output.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>No AI usage policy found (e.g. AI_POLICY.md or docs/ai-usage.md)</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add AI_POLICY.md (or docs/ai-usage.md) covering mandatory human review, personal and sensitive data, approved tools and accountability.</p>
+    <p class="refs">References: NIST AI RMF GOVERN 1.2, NIST AI RMF GOVERN 2.1</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-GOV-02" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">GOV-02</span>Code ownership</span>
+    <span class="c-weight">weight 2</span>
+    <span class="c-summary">No CODEOWNERS file, so nobody is required to review changes.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>CODEOWNERS makes a named person or team responsible for reviewing every change, including generated code.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>No CODEOWNERS file found</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add a CODEOWNERS file (root or .github/) with at least one rule such as `* @org/team`.</p>
+    <p class="refs">References: NIST AI RMF GOVERN 2.1</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-GOV-03" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">GOV-03</span>PR template asks about AI</span>
+    <span class="c-weight">weight 2</span>
+    <span class="c-summary">No pull request template asks authors about AI use.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>A pull request template turns disclosure of AI assistance and confirmation of human review into a routine step.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>No pull request template found</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add .github/pull_request_template.md with a checkbox for AI assistance and one confirming a human reviewed the change.</p>
+    <p class="refs">References: NIST AI RMF GOVERN 4.2</p>
+  </div>
+</details><h3>Map</h3>
+<details class="control fail" id="ctl-MAP-01" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MAP-01</span>AI provenance is declared and reviewed</span>
+    <span class="c-weight">weight 3</span>
+    <span class="c-summary">1 file declared as AI-generated or AI-assisted; 1 without a human reviewer.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Knowing which files came from an assistant, and who reviewed them, is the basis for every later audit or incident response.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="mono">app/summarizer.py</span></td><td>AI-generated file (claude) has no human reviewer</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Declare AI-generated files in .ai-provenance.json or with header markers, and record a human reviewer (reviewed_by) for each.</p>
+    <p class="refs">References: NIST AI RMF MAP 4.1, NIST AI RMF GOVERN 6.1</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-MAP-02" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MAP-02</span>LLM inventory</span>
+    <span class="c-weight">weight 2</span>
+    <span class="c-summary">1 provider detected (openai); 1 not inventoried.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Every LLM provider the product calls receives data. An inventory with purpose and owner makes that data flow visible and accountable.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="mono">app/summarizer.py:7</span></td><td>LLM provider &quot;openai&quot; is used but not listed in ai_systems</td><td><span class="mono">openai</span></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>List each provider in ai_systems of .ai-provenance.json with provider, purpose, owner and data_categories.</p>
+    <p class="refs">References: NIST AI RMF MAP 4.1, NIST AI RMF GOVERN 6.1</p>
+  </div>
+</details>
+<details class="control warn" id="ctl-MAP-03">
+  <summary>
+    <span class="st warn"><span class="ic" aria-hidden="true">!</span>Warn</span>
+    <span class="c-title"><span class="mono">MAP-03</span>Personal data in the repository</span>
+    <span class="c-weight">weight 3</span>
+    <span class="c-summary">1 occurrence of personal data found in the repository.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Personal data committed to a repository is copied to every clone and may be sent to AI assistants as context.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev warn">Medium</span></td><td><span class="mono">app/fixtures/customers.json:2</span></td><td>Valid CPF number</td><td><span class="mono">***.***.***-09</span></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Remove real personal data, rewrite history if needed, and use clearly synthetic values in tests and fixtures.</p>
+    <p class="refs">References: NIST AI RMF MEASURE 2.10, LGPD (Lei 13.709/2018) art. 46</p>
+  </div>
+</details><h3>Measure</h3>
+<details class="control fail" id="ctl-MEA-01" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MEA-01</span>Hard-coded secrets</span>
+    <span class="c-weight">weight 3</span>
+    <span class="c-summary">1 known-format secret, 0 possible credentials and 0 unignored env files.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Assistants often inline credentials to make examples work. A committed secret must be treated as leaked.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">Critical</span></td><td><span class="mono">app/summarizer.py:11</span></td><td>Hard-coded OpenAI-style API key</td><td><span class="mono">sk-p… (48 characters, masked)</span></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Revoke and rotate the credential, load it from the environment or a secret manager, and add env files to .gitignore.</p>
+    <p class="refs">References: NIST AI RMF MEASURE 2.7, CWE-798</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-MEA-02" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MEA-02</span>Risky code patterns</span>
+    <span class="c-weight">weight 2</span>
+    <span class="c-summary">2 occurrences of risky patterns outside tests.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Generated code frequently reaches for dynamic evaluation, shell calls, unsafe deserialisation or disabled TLS because they are the shortest path to a working demo.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="mono">app/summarizer.py:17</span></td><td>TLS certificate verification disabled in a file declared as AI-generated</td><td></td></tr><tr><td><span class="sev fail">High</span></td><td><span class="mono">app/summarizer.py:23</span></td><td>Dynamic code evaluation (eval/exec) in a file declared as AI-generated</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Replace each pattern with a safe alternative (parameterised SQL, safe_load, argument lists instead of shells, verified TLS) or justify it with a reviewed suppression.</p>
+    <p class="refs">References: NIST AI RMF MEASURE 2.7, CWE-95, CWE-78, CWE-502, CWE-295, CWE-89, CWE-79</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-MEA-03" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MEA-03</span>Automated tests</span>
+    <span class="c-weight">weight 2</span>
+    <span class="c-summary">0 test files for 1 source file (ratio 0.00, minimum 0.10).</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Tests are the cheapest way to check that generated code does what the reviewer believes it does.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>No test files found</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add tests alongside the code until the test-to-source file ratio reaches min_test_ratio.</p>
+    <p class="refs">References: NIST AI RMF MEASURE 2.5</p>
+  </div>
+</details><h3>Manage</h3>
+<details class="control fail" id="ctl-MAN-01" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MAN-01</span>Human review evidence</span>
+    <span class="c-weight">weight 3</span>
+    <span class="c-summary">0 of 1 AI-assisted commit has a human Reviewed-by trailer (0%, threshold 80%).</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>A Reviewed-by trailer on AI-assisted commits is durable evidence that a human accepted responsibility for the change.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev na">Info</span></td><td><span class="empty">repository</span></td><td>AI-assisted commit d2d6a7eaff has no human Reviewed-by: feat: summarise support tickets with an LLM</td><td></td></tr><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>Human review rate is below half of the policy threshold</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add `Reviewed-by: Name &lt;email&gt;` trailers to AI-assisted commits (for example via your merge tooling) until the rate reaches review_threshold.</p>
+    <p class="refs">References: NIST AI RMF MANAGE 1.3, NIST AI RMF GOVERN 3.2</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-MAN-02" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MAN-02</span>CI runs tests</span>
+    <span class="c-weight">weight 2</span>
+    <span class="c-summary">No CI configuration found.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Continuous integration applies the same checks to every change, whoever or whatever wrote it.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>No CI configuration found</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add a CI pipeline (GitHub Actions, GitLab CI, ...) that runs the test suite on every pull request.</p>
+    <p class="refs">References: NIST AI RMF MANAGE 2.4</p>
+  </div>
+</details>
+<details class="control warn" id="ctl-MAN-03">
+  <summary>
+    <span class="st warn"><span class="ic" aria-hidden="true">!</span>Warn</span>
+    <span class="c-title"><span class="mono">MAN-03</span>Locked dependencies</span>
+    <span class="c-weight">weight 1</span>
+    <span class="c-summary">1 dependency manifest checked; some dependencies are not locked.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>Assistants suggest packages freely, sometimes ones that do not exist. Locking versions makes every install reviewable and reproducible.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev warn">Medium</span></td><td><span class="mono">requirements.txt:1</span></td><td>Requirement is not pinned with ==</td><td><span class="mono">openai</span></td></tr><tr><td><span class="sev warn">Medium</span></td><td><span class="mono">requirements.txt:2</span></td><td>Requirement is not pinned with ==</td><td><span class="mono">requests&gt;=2.31</span></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Commit the lockfile for each package manager, or pin requirements with ==.</p>
+    <p class="refs">References: NIST AI RMF GOVERN 6.1, NIST AI RMF MANAGE 3.1</p>
+  </div>
+</details>
+<details class="control fail" id="ctl-MAN-04" open>
+  <summary>
+    <span class="st fail"><span class="ic" aria-hidden="true">✕</span>Fail</span>
+    <span class="c-title"><span class="mono">MAN-04</span>Security and incident process</span>
+    <span class="c-weight">weight 1</span>
+    <span class="c-summary">No security policy or incident process found.</span>
+  </summary>
+  <div class="c-body">
+    <h4>Why it matters</h4><p>When generated code causes a vulnerability, people need to know how to report it and who responds.</p>
+    <h4>Findings</h4><div class="table-wrap"><table><thead><tr><th scope="col">Severity</th><th scope="col">Location</th><th scope="col">Finding</th><th scope="col">Evidence (masked)</th></tr></thead><tbody><tr><td><span class="sev fail">High</span></td><td><span class="empty">repository</span></td><td>No SECURITY.md or incident runbook found</td><td></td></tr></tbody></table></div>
+    <h4>Remediation</h4><p>Add SECURITY.md describing how to report vulnerabilities and how incidents are handled.</p>
+    <p class="refs">References: NIST AI RMF MANAGE 4.1, NIST AI RMF MANAGE 4.3</p>
+  </div>
+</details></section>
+<section aria-labelledby="h-prov">
+  <h2 id="h-prov">Declared provenance</h2>
+  <p class="lede">Files the team declares as AI-generated or AI-assisted, from
+  <code>.ai-provenance.json</code> (not present) and header markers. aigov does not detect authorship.</p>
+  <div class="table-wrap"><table><thead><tr><th scope="col">File</th><th scope="col">Kind</th><th scope="col">Tool</th><th scope="col">Model</th><th scope="col">Reviewed by</th><th scope="col">Reviewed at</th><th scope="col">Declared in</th></tr></thead><tbody><tr><td><span class="mono">app/summarizer.py</span></td><td>Generated</td><td>claude</td><td>claude-sonnet</td><td><span class="st fail"><span class="ic" aria-hidden="true">✕</span>None</span></td><td>&ndash;</td><td>marker</td></tr></tbody></table></div>
+</section>
+<section aria-labelledby="h-commits">
+  <h2 id="h-commits">AI-assisted commits</h2>
+  <p class="lede">1 of 2 commits read carry AI signals.</p><div class="table-wrap"><table><thead><tr><th scope="col">Commit</th><th scope="col">Date</th><th scope="col">Author</th><th scope="col">Subject</th><th scope="col">AI signals</th><th scope="col">Human review</th><th scope="col">Reviewers</th></tr></thead><tbody><tr><td class="mono">d2d6a7eaff</td><td class="num">2026-10-15</td><td>Ana Souza</td><td>feat: summarise support tickets with an LLM</td><td>Co-authored-by: Claude</td><td><span class="st fail"><span class="ic" aria-hidden="true">✕</span>No</span></td><td>&ndash;</td></tr></tbody></table></div>
+</section>
+<section aria-labelledby="h-supp">
+  <h2 id="h-supp">Suppressions</h2>
+  <p class="lede">Findings silenced with <code>aigov:ignore</code> on a line or
+  <code>aigov:ignore-file</code> in a file header. They do not count against the score and are
+  listed here so a reviewer can challenge them.</p>
+  <p class="empty">No findings were suppressed.</p>
+</section>
+<section aria-labelledby="h-limits">
+  <h2 id="h-limits">Limitations and scope</h2>
+  <div class="notice"><p><strong>This is not a compliance attestation.</strong> aigov is a heuristic scorecard. It is not legal advice, not an audit and not a certification, and it does not attest compliance with any law, regulation or standard. NIST AI RMF functions are used only to organise the report.</p></div>
+  <ul class="limits"><li>aigov does not detect AI authorship. It reads what the team declares (manifest, file markers, commit trailers). The absence of signals does not prove that AI was not used.</li><li>All checks are heuristics based on file names and regular expressions. Expect false positives and false negatives.</li><li>Secret and personal-data detection covers a fixed set of formats (e.g. CPF, payment cards, well-known API key prefixes); other formats are not detected.</li><li>Provider detection reads Python, JavaScript/TypeScript and Go imports plus dependency manifests. Other languages are only covered through their dependency manifests.</li><li>Comment detection is line-based; multi-line strings and docstrings are scanned as code.</li><li>Commit trailers are read anywhere in the commit body, not only in the final paragraph.</li><li>Files over the size limit, binary files, symlinks and git-ignored env files are not scanned.</li></ul>
+  <p class="meta">6 files scanned. Policy: <span class="mono">built-in defaults</span>
+  (minimum score 70, review threshold 80%, minimum test ratio 0.1).</p>
+  
+</section>
+<footer>Generated by aigov 0.1.0 on 2026-10-28T02:24:03Z. A heuristic scorecard: not legal advice, not a
+certification.</footer>
+</main>
+<script>
+(function () {
+  function openFromHash(hash) {
+    if (!hash || hash.indexOf('#ctl-') !== 0) return;
+    var el = document.getElementById(hash.slice(1));
+    if (el && el.tagName === 'DETAILS') el.open = true;
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href^="#ctl-"]') : null;
+    if (a) openFromHash(a.getAttribute('href'));
+  });
+  window.addEventListener('hashchange', function () { openFromHash(location.hash); });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details').forEach(function (d) { d.open = true; });
+  });
+  openFromHash(location.hash);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+{
+  "tool": {
+    "name": "aigov",
+    "version": "0.1.0"
+  },
+  "generated_at": "2026-10-28T02:24:03Z",
+  "target": "needs-remediation",
+  "disclaimer": "aigov is a heuristic scorecard. It is not legal advice, not an audit and not a certification, and it does not attest compliance with any law, regulation or standard. NIST AI RMF functions are used only to organise the report.",
+  "score": 6.9,
+  "function_scores": {
+    "Govern": 0.0,
+    "Map": 18.8,
+    "Measure": 0.0,
+    "Manage": 7.1
+  },
+  "verdict": "Blocked",
+  "headline": "Blocked: 1 critical finding must be fixed before this ships",
+  "counts": {
+    "pass": 0,
+    "warn": 2,
+    "fail": 11,
+    "na": 0
+  },
+  "critical_findings": 1,
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "score 6.9 is below the minimum of 70",
+      "1 critical finding and block_on_critical is enabled"
+    ]
+  },
+  "policy": {
+    "ai_usage": "declared",
+    "min_score": 70.0,
+    "block_on_critical": true,
+    "review_threshold": 0.8,
+    "min_test_ratio": 0.1,
+    "max_file_bytes": 1000000,
+    "ignore": [],
+    "disabled_controls": [],
+    "extra_ai_commit_patterns": [],
+    "source": null
+  },
+  "controls": [
+    {
+      "id": "GOV-01",
+      "title": "AI usage policy",
+      "function": "Govern",
+      "weight": 3,
+      "status": "fail",
+      "summary": "No AI usage policy found.",
+      "why": "Without a written policy, each engineer decides alone which tools to use, what data may be pasted into them and who answers for the output.",
+      "remediation": "Add AI_POLICY.md (or docs/ai-usage.md) covering mandatory human review, personal and sensitive data, approved tools and accountability.",
+      "refs": [
+        "NIST AI RMF GOVERN 1.2",
+        "NIST AI RMF GOVERN 2.1"
+      ],
+      "findings": [
+        {
+          "message": "No AI usage policy found (e.g. AI_POLICY.md or docs/ai-usage.md)",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "GOV-02",
+      "title": "Code ownership",
+      "function": "Govern",
+      "weight": 2,
+      "status": "fail",
+      "summary": "No CODEOWNERS file, so nobody is required to review changes.",
+      "why": "CODEOWNERS makes a named person or team responsible for reviewing every change, including generated code.",
+      "remediation": "Add a CODEOWNERS file (root or .github/) with at least one rule such as `* @org/team`.",
+      "refs": [
+        "NIST AI RMF GOVERN 2.1"
+      ],
+      "findings": [
+        {
+          "message": "No CODEOWNERS file found",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "GOV-03",
+      "title": "PR template asks about AI",
+      "function": "Govern",
+      "weight": 2,
+      "status": "fail",
+      "summary": "No pull request template asks authors about AI use.",
+      "why": "A pull request template turns disclosure of AI assistance and confirmation of human review into a routine step.",
+      "remediation": "Add .github/pull_request_template.md with a checkbox for AI assistance and one confirming a human reviewed the change.",
+      "refs": [
+        "NIST AI RMF GOVERN 4.2"
+      ],
+      "findings": [
+        {
+          "message": "No pull request template found",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "MAP-01",
+      "title": "AI provenance is declared and reviewed",
+      "function": "Map",
+      "weight": 3,
+      "status": "fail",
+      "summary": "1 file declared as AI-generated or AI-assisted; 1 without a human reviewer.",
+      "why": "Knowing which files came from an assistant, and who reviewed them, is the basis for every later audit or incident response.",
+      "remediation": "Declare AI-generated files in .ai-provenance.json or with header markers, and record a human reviewer (reviewed_by) for each.",
+      "refs": [
+        "NIST AI RMF MAP 4.1",
+        "NIST AI RMF GOVERN 6.1"
+      ],
+      "findings": [
+        {
+          "message": "AI-generated file (claude) has no human reviewer",
+          "severity": "high",
+          "file": "app/summarizer.py",
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "MAP-02",
+      "title": "LLM inventory",
+      "function": "Map",
+      "weight": 2,
+      "status": "fail",
+      "summary": "1 provider detected (openai); 1 not inventoried.",
+      "why": "Every LLM provider the product calls receives data. An inventory with purpose and owner makes that data flow visible and accountable.",
+      "remediation": "List each provider in ai_systems of .ai-provenance.json with provider, purpose, owner and data_categories.",
+      "refs": [
+        "NIST AI RMF MAP 4.1",
+        "NIST AI RMF GOVERN 6.1"
+      ],
+      "findings": [
+        {
+          "message": "LLM provider \"openai\" is used but not listed in ai_systems",
+          "severity": "high",
+          "file": "app/summarizer.py",
+          "line": 7,
+          "evidence": "openai"
+        }
+      ]
+    },
+    {
+      "id": "MAP-03",
+      "title": "Personal data in the repository",
+      "function": "Map",
+      "weight": 3,
+      "status": "warn",
+      "summary": "1 occurrence of personal data found in the repository.",
+      "why": "Personal data committed to a repository is copied to every clone and may be sent to AI assistants as context.",
+      "remediation": "Remove real personal data, rewrite history if needed, and use clearly synthetic values in tests and fixtures.",
+      "refs": [
+        "NIST AI RMF MEASURE 2.10",
+        "LGPD (Lei 13.709/2018) art. 46"
+      ],
+      "findings": [
+        {
+          "message": "Valid CPF number",
+          "severity": "medium",
+          "file": "app/fixtures/customers.json",
+          "line": 2,
+          "evidence": "***.***.***-09"
+        }
+      ]
+    },
+    {
+      "id": "MEA-01",
+      "title": "Hard-coded secrets",
+      "function": "Measure",
+      "weight": 3,
+      "status": "fail",
+      "summary": "1 known-format secret, 0 possible credentials and 0 unignored env files.",
+      "why": "Assistants often inline credentials to make examples work. A committed secret must be treated as leaked.",
+      "remediation": "Revoke and rotate the credential, load it from the environment or a secret manager, and add env files to .gitignore.",
+      "refs": [
+        "NIST AI RMF MEASURE 2.7",
+        "CWE-798"
+      ],
+      "findings": [
+        {
+          "message": "Hard-coded OpenAI-style API key",
+          "severity": "critical",
+          "file": "app/summarizer.py",
+          "line": 11,
+          "evidence": "sk-p… (48 characters, masked)"
+        }
+      ]
+    },
+    {
+      "id": "MEA-02",
+      "title": "Risky code patterns",
+      "function": "Measure",
+      "weight": 2,
+      "status": "fail",
+      "summary": "2 occurrences of risky patterns outside tests.",
+      "why": "Generated code frequently reaches for dynamic evaluation, shell calls, unsafe deserialisation or disabled TLS because they are the shortest path to a working demo.",
+      "remediation": "Replace each pattern with a safe alternative (parameterised SQL, safe_load, argument lists instead of shells, verified TLS) or justify it with a reviewed suppression.",
+      "refs": [
+        "NIST AI RMF MEASURE 2.7",
+        "CWE-95",
+        "CWE-78",
+        "CWE-502",
+        "CWE-295",
+        "CWE-89",
+        "CWE-79"
+      ],
+      "findings": [
+        {
+          "message": "TLS certificate verification disabled in a file declared as AI-generated",
+          "severity": "high",
+          "file": "app/summarizer.py",
+          "line": 17,
+          "evidence": null
+        },
+        {
+          "message": "Dynamic code evaluation (eval/exec) in a file declared as AI-generated",
+          "severity": "high",
+          "file": "app/summarizer.py",
+          "line": 23,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "MEA-03",
+      "title": "Automated tests",
+      "function": "Measure",
+      "weight": 2,
+      "status": "fail",
+      "summary": "0 test files for 1 source file (ratio 0.00, minimum 0.10).",
+      "why": "Tests are the cheapest way to check that generated code does what the reviewer believes it does.",
+      "remediation": "Add tests alongside the code until the test-to-source file ratio reaches min_test_ratio.",
+      "refs": [
+        "NIST AI RMF MEASURE 2.5"
+      ],
+      "findings": [
+        {
+          "message": "No test files found",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "MAN-01",
+      "title": "Human review evidence",
+      "function": "Manage",
+      "weight": 3,
+      "status": "fail",
+      "summary": "0 of 1 AI-assisted commit has a human Reviewed-by trailer (0%, threshold 80%).",
+      "why": "A Reviewed-by trailer on AI-assisted commits is durable evidence that a human accepted responsibility for the change.",
+      "remediation": "Add `Reviewed-by: Name <email>` trailers to AI-assisted commits (for example via your merge tooling) until the rate reaches review_threshold.",
+      "refs": [
+        "NIST AI RMF MANAGE 1.3",
+        "NIST AI RMF GOVERN 3.2"
+      ],
+      "findings": [
+        {
+          "message": "AI-assisted commit d2d6a7eaff has no human Reviewed-by: feat: summarise support tickets with an LLM",
+          "severity": "info",
+          "file": null,
+          "line": null,
+          "evidence": null
+        },
+        {
+          "message": "Human review rate is below half of the policy threshold",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "MAN-02",
+      "title": "CI runs tests",
+      "function": "Manage",
+      "weight": 2,
+      "status": "fail",
+      "summary": "No CI configuration found.",
+      "why": "Continuous integration applies the same checks to every change, whoever or whatever wrote it.",
+      "remediation": "Add a CI pipeline (GitHub Actions, GitLab CI, ...) that runs the test suite on every pull request.",
+      "refs": [
+        "NIST AI RMF MANAGE 2.4"
+      ],
+      "findings": [
+        {
+          "message": "No CI configuration found",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": "MAN-03",
+      "title": "Locked dependencies",
+      "function": "Manage",
+      "weight": 1,
+      "status": "warn",
+      "summary": "1 dependency manifest checked; some dependencies are not locked.",
+      "why": "Assistants suggest packages freely, sometimes ones that do not exist. Locking versions makes every install reviewable and reproducible.",
+      "remediation": "Commit the lockfile for each package manager, or pin requirements with ==.",
+      "refs": [
+        "NIST AI RMF GOVERN 6.1",
+        "NIST AI RMF MANAGE 3.1"
+      ],
+      "findings": [
+        {
+          "message": "Requirement is not pinned with ==",
+          "severity": "medium",
+          "file": "requirements.txt",
+          "line": 1,
+          "evidence": "openai"
+        },
+        {
+          "message": "Requirement is not pinned with ==",
+          "severity": "medium",
+          "file": "requirements.txt",
+          "line": 2,
+          "evidence": "requests>=2.31"
+        }
+      ]
+    },
+    {
+      "id": "MAN-04",
+      "title": "Security and incident process",
+      "function": "Manage",
+      "weight": 1,
+      "status": "fail",
+      "summary": "No security policy or incident process found.",
+      "why": "When generated code causes a vulnerability, people need to know how to report it and who responds.",
+      "remediation": "Add SECURITY.md describing how to report vulnerabilities and how incidents are handled.",
+      "refs": [
+        "NIST AI RMF MANAGE 4.1",
+        "NIST AI RMF MANAGE 4.3"
+      ],
+      "findings": [
+        {
+          "message": "No SECURITY.md or incident runbook found",
+          "severity": "high",
+          "file": null,
+          "line": null,
+          "evidence": null
+        }
+      ]
+    }
+  ],
+  "suppressions": [],
+  "provenance": {
+    "manifest_present": false,
+    "files": [
+      {
+        "path": "app/summarizer.py",
+        "tool": "claude",
+        "model": "claude-sonnet",
+        "reviewed_by": "",
+        "reviewed_at": "",
+        "kind": "generated",
+        "sources": [
+          "marker"
+        ]
+      }
+    ]
+  },
+  "git": {
+    "available": true,
+    "reason": "",
+    "total_commits": 2,
+    "truncated": false,
+    "ai_assisted_commits": [
+      {
+        "sha": "d2d6a7eaff79ebfcdb5994593cfc4d53cee88fee",
+        "author": "Ana Souza",
+        "date": "2026-10-15T14:30:00Z",
+        "subject": "feat: summarise support tickets with an LLM",
+        "ai_signals": [
+          "Co-authored-by: Claude"
+        ],
+        "reviewers": [],
+        "ai_reviewers": [],
+        "ai_assisted": true,
+        "human_reviewed": false
+      }
+    ]
+  },
+  "scan": {
+    "files_scanned": 6,
+    "skipped": []
+  },
+  "limitations": [
+    "aigov does not detect AI authorship. It reads what the team declares (manifest, file markers, commit trailers). The absence of signals does not prove that AI was not used.",
+    "All checks are heuristics based on file names and regular expressions. Expect false positives and false negatives.",
+    "Secret and personal-data detection covers a fixed set of formats (e.g. CPF, payment cards, well-known API key prefixes); other formats are not detected.",
+    "Provider detection reads Python, JavaScript/TypeScript and Go imports plus dependency manifests. Other languages are only covered through their dependency manifests.",
+    "Comment detection is line-based; multi-line strings and docstrings are scanned as code.",
+    "Commit trailers are read anywhere in the commit body, not only in the final paragraph.",
+    "Files over the size limit, binary files, symlinks and git-ignored env files are not scanned."
+  ]
+}

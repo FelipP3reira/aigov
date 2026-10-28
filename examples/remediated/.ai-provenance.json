@@ -1,0 +1,19 @@
+{
+  "ai_systems": [
+    {
+      "provider": "openai",
+      "purpose": "Summarise support tickets for agents",
+      "owner": "support-platform team",
+      "data_categories": ["support ticket text", "customer plan"]
+    }
+  ],
+  "files": [
+    {
+      "path": "app/summarizer.py",
+      "tool": "claude",
+      "model": "claude-sonnet",
+      "reviewed_by": "Ana Souza",
+      "reviewed_at": "2026-10-20"
+    }
+  ]
+}

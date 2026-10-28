@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: tests (python ${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: windows-latest
+            python: "3.13"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit and integration tests
+        run: python -m unittest discover -v
+
+  scorecard:
+    name: aigov self-scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history so MAN-01 can read commit trailers
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scan this repository
+        run: python -m aigov scan . --html aigov-report.html --json aigov-report.json
+      - name: Build demo reports
+        if: always()
+        run: python scripts/build_demo.py --out demo
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aigov-reports
+          path: |
+            aigov-report.html
+            aigov-report.json
+            demo/

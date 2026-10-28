@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aigov demo: side by side</title>
+<style>
+:root { --bg: #F5F7F8; --ink: #14202B; --muted: #4D5B68; --line: #D8DEE3; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0F161D; --ink: #E6ECF1; --muted: #9AA8B5; --line: #2A3743; } }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { padding: 20px 24px 8px; }
+h1 { font-size: 1.3rem; margin: 0 0 4px; }
+p { margin: 0; color: var(--muted); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 24px 24px; }
+figure { margin: 0; }
+figcaption { font-weight: 600; margin-bottom: 6px; }
+figcaption a { color: inherit; }
+iframe { width: 100%; height: 82vh; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>aigov demo: the same app before and after remediation</h1>
+  <p>Heuristic scorecard, not legal advice and not a certification.</p>
+</header>
+<div class="grid"><figure><figcaption><a href="needs-remediation.html">needs-remediation</a>: Blocked (score 6.9)</figcaption><iframe src="needs-remediation.html" title="needs-remediation report"></iframe></figure><figure><figcaption><a href="remediated.html">remediated</a>: Aligned (score 100)</figcaption><iframe src="remediated.html" title="remediated report"></iframe></figure></div>
+</body>
+</html>

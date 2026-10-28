@@ -1,0 +1,6 @@
+{
+  "ai_usage": "declared",
+  "min_score": 85,
+  "block_on_critical": true,
+  "review_threshold": 0.8
+}

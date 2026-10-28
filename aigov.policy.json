@@ -1,0 +1,6 @@
+{
+  "ai_usage": "declared",
+  "min_score": 70,
+  "block_on_critical": true,
+  "ignore": ["examples/*", "docs/demo/*"]
+}
