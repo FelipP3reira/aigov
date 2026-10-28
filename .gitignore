@@ -7,3 +7,4 @@ dist/
 *.egg-info/
 aigov-report.html
 aigov-report.json
+PROMPT.md
