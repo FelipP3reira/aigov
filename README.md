@@ -284,5 +284,5 @@ values, so the repository passes its own scan.
 ### Provenance of this repository
 
 This code base was generated with an AI coding assistant and is declared in
-[`.ai-provenance.json`](.ai-provenance.json). Until a maintainer reviews the files and records
-`reviewed_by`, MAP-01 fails in the self-scan, which is the intended behaviour.
+[`.ai-provenance.json`](.ai-provenance.json). Every declared file was reviewed by the
+maintainer, Felipe Pereira, on 2026-10-27, as recorded in `reviewed_by` and `reviewed_at`.
